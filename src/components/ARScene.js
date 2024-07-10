@@ -16,7 +16,9 @@ const ARScene = () => {
     containerRef.current.appendChild(renderer.current.domElement);
 
     // Add AR button
-    document.body.appendChild(ARButton.createButton(renderer.current));
+    document.body.appendChild(ARButton.createButton(renderer.current, {
+      requiredFeatures: ['hit-test'], // Request hit-test feature
+    }));
 
     // Add light
     const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
