@@ -1,15 +1,16 @@
+// src/components/ARScene.js
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { ARButton } from 'three/examples/jsm/webxr/ARButton';
-import { GLTFLoader } from 'three-stdlib';
 import Reticle from './Reticle';
-import HamburgerMenu from './HamburgerMenu';
+import { placeModel } from './ModelPlacement';
 
 const ARScene = () => {
   const containerRef = useRef();
   const scene = useRef(new THREE.Scene());
   const camera = useRef(new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20));
   const renderer = useRef();
+  const reticleRef = useRef();
   const [currentModel, setCurrentModel] = useState(null);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ const ARScene = () => {
     reticle.matrixAutoUpdate = false;
     reticle.visible = false;
     scene.current.add(reticle);
+    reticleRef.current = reticle;
 
     let hitTestSource = null;
     let localSpace = null;
@@ -95,28 +97,23 @@ const ARScene = () => {
 
     window.addEventListener('resize', onResize);
 
+    // Add tap event listener
+    const onTouchStart = (event) => {
+      placeModel(scene.current, reticleRef.current, 'path/to/model.glb', currentModel, setCurrentModel);
+    };
+
+    window.addEventListener('touchstart', onTouchStart);
+
     return () => {
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('touchstart', onTouchStart);
       if (reticle) scene.current.remove(reticle);
       renderer.current.setAnimationLoop(null);
     };
   }, [currentModel]);
 
-  const handleSelectModel = (modelPath) => {
-    const loader = new GLTFLoader();
-    loader.load(modelPath, (gltf) => {
-      if (currentModel) {
-        scene.current.remove(currentModel);
-      }
-      const model = gltf.scene;
-      scene.current.add(model);
-      setCurrentModel(model);
-    });
-  };
-
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
-      <HamburgerMenu onSelectModel={handleSelectModel} />
       <Reticle scene={scene.current} renderer={renderer.current} camera={camera.current} />
     </div>
   );
