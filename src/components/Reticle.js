@@ -15,35 +15,11 @@ const Reticle = ({ scene, renderer, camera }) => {
     reticleRef.current = reticle;
     scene.add(reticle);
 
-    const hitTestSourceRequested = false;
     let hitTestSource = null;
     let localSpace = null;
 
-    const onXRFrame = (time, frame) => {
-      const session = renderer.xr.getSession();
-      if (session) {
-        const referenceSpace = renderer.xr.getReferenceSpace();
-        const viewerPose = frame.getViewerPose(referenceSpace);
-        if (viewerPose) {
-          const hitTestResults = frame.getHitTestResults(hitTestSource);
-          if (hitTestResults.length > 0) {
-            const hit = hitTestResults[0];
-            const hitPose = hit.getPose(localSpace);
-
-            reticle.visible = true;
-            reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
-            reticle.updateMatrixWorld(true);
-          } else {
-            reticle.visible = false;
-          }
-        }
-      }
-      renderer.setAnimationLoop(onXRFrame);
-    };
-
-    renderer.xr.addEventListener('sessionstart', async (event) => {
-      const session = renderer.xr.getSession();
-      const referenceSpace = renderer.xr.getReferenceSpace();
+    const onSessionStarted = async (session) => {
+      const referenceSpace = await session.requestReferenceSpace('local');
       localSpace = await session.requestReferenceSpace('viewer');
       hitTestSource = await session.requestHitTestSource({ space: localSpace });
 
@@ -52,7 +28,29 @@ const Reticle = ({ scene, renderer, camera }) => {
         localSpace = null;
       });
 
-      renderer.setAnimationLoop(onXRFrame);
+      renderer.setAnimationLoop((time, frame) => {
+        if (frame) {
+          const viewerPose = frame.getViewerPose(referenceSpace);
+          if (viewerPose) {
+            const hitTestResults = frame.getHitTestResults(hitTestSource);
+            if (hitTestResults.length > 0) {
+              const hit = hitTestResults[0];
+              const hitPose = hit.getPose(referenceSpace);
+
+              reticle.visible = true;
+              reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
+              reticle.updateMatrixWorld(true);
+            } else {
+              reticle.visible = false;
+            }
+          }
+        }
+        renderer.render(scene, camera);
+      });
+    };
+
+    renderer.xr.addEventListener('sessionstart', (event) => {
+      onSessionStarted(renderer.xr.getSession());
     });
 
     return () => {
