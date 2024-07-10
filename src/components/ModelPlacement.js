@@ -6,7 +6,7 @@ export const placeModel = (scene, reticle, currentModel, setCurrentModel) => {
   const loader = new GLTFLoader();
 
   if (reticle.visible) {
-    loader.load('/models/chair.glb', (gltf) => {
+    loader.load('./models/chair.glb', (gltf) => {
       if (currentModel) {
         scene.remove(currentModel);
       }
