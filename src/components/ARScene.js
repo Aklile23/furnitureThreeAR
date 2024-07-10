@@ -1,12 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { ARButton } from 'three/examples/jsm/webxr/ARButton';
+import { GLTFLoader } from 'three-stdlib';
+import Reticle from './Reticle';
+import HamburgerMenu from './HamburgerMenu';
 
 const ARScene = () => {
   const containerRef = useRef();
   const scene = useRef(new THREE.Scene());
   const camera = useRef(new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20));
   const renderer = useRef();
+  const [currentModel, setCurrentModel] = useState(null);
 
   useEffect(() => {
     // Initialize renderer
@@ -17,7 +21,7 @@ const ARScene = () => {
 
     // Add AR button
     document.body.appendChild(ARButton.createButton(renderer.current, {
-      requiredFeatures: ['hit-test'], // Request hit-test feature
+      requiredFeatures: ['hit-test'],
     }));
 
     // Add light
@@ -65,6 +69,11 @@ const ARScene = () => {
 
               reticle.visible = true;
               reticle.matrix.fromArray(hitPose.transform.matrix);
+
+              // If a model is selected, update its position
+              if (currentModel) {
+                currentModel.position.copy(reticle.position);
+              }
             } else {
               reticle.visible = false;
             }
@@ -91,9 +100,26 @@ const ARScene = () => {
       if (reticle) scene.current.remove(reticle);
       renderer.current.setAnimationLoop(null);
     };
-  }, []);
+  }, [currentModel]);
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
+  const handleSelectModel = (modelPath) => {
+    const loader = new GLTFLoader();
+    loader.load(modelPath, (gltf) => {
+      if (currentModel) {
+        scene.current.remove(currentModel);
+      }
+      const model = gltf.scene;
+      scene.current.add(model);
+      setCurrentModel(model);
+    });
+  };
+
+  return (
+    <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
+      <HamburgerMenu onSelectModel={handleSelectModel} />
+      <Reticle scene={scene.current} renderer={renderer.current} camera={camera.current} />
+    </div>
+  );
 };
 
 export default ARScene;
