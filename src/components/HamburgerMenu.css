@@ -1,10 +1,16 @@
-.hamburger {
+.menu-container {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Ensure it's on top */
+  display: flex;
+  flex-direction: column;
+}
+
+.hamburger {
+  margin: 20px;
   font-size: 30px;
   cursor: pointer;
-  z-index: 1000;
 }
 
 .menu {
@@ -19,7 +25,6 @@
   justify-content: center;
   align-items: center;
   transition: left 0.3s;
-  z-index: 999;
 }
 
 .menu.open {
