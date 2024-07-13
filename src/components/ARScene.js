@@ -1,17 +1,16 @@
 // src/components/ARScene.js
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { ARButton } from 'three/examples/jsm/webxr/ARButton';
 import Reticle from './Reticle';
 import { placeModel } from './ModelPlacement';
 
-const ARScene = () => {
+const ARScene = ({ currentModel, setCurrentModel, onARSessionStart }) => {
   const containerRef = useRef();
   const scene = useRef(new THREE.Scene());
   const camera = useRef(new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20));
   const renderer = useRef();
   const reticleRef = useRef();
-  const [currentModel, setCurrentModel] = useState(null);
 
   useEffect(() => {
     // Initialize renderer
@@ -21,9 +20,13 @@ const ARScene = () => {
     containerRef.current.appendChild(renderer.current.domElement);
 
     // Add AR button
-    document.body.appendChild(ARButton.createButton(renderer.current, {
+    const arButton = ARButton.createButton(renderer.current, {
       requiredFeatures: ['hit-test'],
-    }));
+    });
+    arButton.addEventListener('click', () => {
+      onARSessionStart();
+    });
+    document.body.appendChild(arButton);
 
     // Add light
     const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
@@ -99,7 +102,7 @@ const ARScene = () => {
 
     // Add tap event listener
     const onTouchStart = (event) => {
-      placeModel(scene.current, reticleRef.current, 'path/to/model.glb', currentModel, setCurrentModel);
+      placeModel(scene.current, reticleRef.current, currentModel, setCurrentModel);
     };
 
     window.addEventListener('touchstart', onTouchStart);
