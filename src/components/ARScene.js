@@ -99,7 +99,7 @@ const ARScene = () => {
 
     // Add tap event listener
     const onTouchStart = (event) => {
-      placeModel(scene.current, reticleRef.current, currentModel, setCurrentModel);
+      placeModel(scene.current, reticleRef.current, 'path/to/model.glb', currentModel, setCurrentModel);
     };
 
     window.addEventListener('touchstart', onTouchStart);
