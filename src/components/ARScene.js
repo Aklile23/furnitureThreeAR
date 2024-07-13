@@ -1,9 +1,10 @@
 // src/components/ARScene.js
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { ARButton } from 'three/examples/jsm/webxr/ARButton';
 import Reticle from './Reticle';
 import { placeModel } from './ModelPlacement';
+import HamburgerMenu from './HamburgerMenu'; // Import the HamburgerMenu component
 
 const ARScene = ({ currentModel, setCurrentModel, onARSessionStart }) => {
   const containerRef = useRef();
@@ -11,6 +12,7 @@ const ARScene = ({ currentModel, setCurrentModel, onARSessionStart }) => {
   const camera = useRef(new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20));
   const renderer = useRef();
   const reticleRef = useRef();
+  const [isARSessionStarted, setARSessionStarted] = useState(false);
 
   useEffect(() => {
     // Initialize renderer
@@ -25,6 +27,7 @@ const ARScene = ({ currentModel, setCurrentModel, onARSessionStart }) => {
     });
     arButton.addEventListener('click', () => {
       onARSessionStart();
+      setARSessionStarted(true); // Set AR session started state
     });
     document.body.appendChild(arButton);
 
@@ -61,6 +64,7 @@ const ARScene = ({ currentModel, setCurrentModel, onARSessionStart }) => {
       session.addEventListener('end', () => {
         hitTestSource = null;
         localSpace = null;
+        setARSessionStarted(false); // Reset AR session state when session ends
       });
 
       renderer.current.setAnimationLoop((time, frame) => {
@@ -116,8 +120,9 @@ const ARScene = ({ currentModel, setCurrentModel, onARSessionStart }) => {
   }, [currentModel]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Reticle scene={scene.current} renderer={renderer.current} camera={camera.current} />
+      {isARSessionStarted && <HamburgerMenu onSelectModel={(modelPath) => setCurrentModel(modelPath)} />}
     </div>
   );
 };
